@@ -1,0 +1,5 @@
+Run,Tx Count,Shards,Nodes/Shard,Total Latency (s),TPS,Avg Shard Latency (s),Finalization Time (s),Success Rate (%),CPU Cores,Goroutines
+1,1000,1,4,0.2014,4965.54,0.2014,0.0201,98.50,8,2
+2,1000,2,4,0.2005,4988.73,0.1002,0.0200,98.50,8,2
+3,1000,4,4,0.2003,4992.52,0.0501,0.0200,98.50,8,2
+4,1000,8,4,0.2016,4961.10,0.0252,0.0202,98.50,8,2
