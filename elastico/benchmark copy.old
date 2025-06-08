@@ -12,7 +12,6 @@ import (
 )
 
 var payloadSizes = []int{64, 128, 256, 512, 1024, 2048, 4096, 8192} // Bytes
-var transactionsPerIteration = 5                                    // Number of transactions to simulate per iteration
 
 func RunBenchmark() {
 	file, err := os.Create("benchmark.csv")
@@ -25,27 +24,21 @@ func RunBenchmark() {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Updated CSV header to include NumTransactions
-	writer.Write([]string{"Iteration", "PayloadSize", "NumTransactions", "Latency(s)", "CPU(%)", "Memory(MB)"})
+	writer.Write([]string{"Iteration", "PayloadSize", "Latency(s)", "CPU(%)", "Memory(MB)"})
 
 	iteration := 1
 	for _, size := range payloadSizes {
-		fmt.Printf("\n📦 Testing payload size: %d bytes (Transactions per iteration: %d)\n", size, transactionsPerIteration)
+		fmt.Printf("\n📦 Testing payload size: %d bytes\n", size)
 		for i := 0; i < 50; i++ {
-			fmt.Printf("⚙️ Iteration %d starting... (%d transactions)\n", iteration, transactionsPerIteration)
+			fmt.Printf("⚙️ Iteration %d starting...\n", iteration)
 
-			// CPU measurement before any transaction
 			cpuBefore, _ := cpu.Percent(100*time.Millisecond, false)
 			start := time.Now()
 
-			// Run multiple transactions sequentially
-			for t := 0; t < transactionsPerIteration; t++ {
-				runElasticoTransaction(size)
-			}
+			runElasticoTransaction(size)
 
-			// Measure total latency for all transactions
 			latency := time.Since(start).Seconds()
-			// Pause briefly before measuring CPU again
+			// pause slightly before measuring CPU again
 			time.Sleep(300 * time.Millisecond)
 			cpuAfter, _ := cpu.Percent(100*time.Millisecond, false)
 
@@ -63,14 +56,12 @@ func RunBenchmark() {
 			avgCPU := (cpuBefore[0] + cpuAfter[0]) / 2
 			usedMemMB := float64(memInfo.RSS) / (1024 * 1024)
 
-			fmt.Printf("✅ Iteration %d complete. Latency: %.4fs (for %d tx) | CPU: %.2f%% | Mem: %.2fMB\n",
-				iteration, latency, transactionsPerIteration, avgCPU, usedMemMB)
+			fmt.Printf("✅ Iteration %d complete. Latency: %.4fs | CPU: %.2f%% | Mem: %.2fMB\n",
+				iteration, latency, avgCPU, usedMemMB)
 
-			// Write results to CSV: iteration, payload size, number of tx, latency, CPU, memory
 			writer.Write([]string{
 				fmt.Sprintf("%d", iteration),
 				fmt.Sprintf("%d", size),
-				fmt.Sprintf("%d", transactionsPerIteration),
 				fmt.Sprintf("%.4f", latency),
 				fmt.Sprintf("%.2f", avgCPU),
 				fmt.Sprintf("%.2f", usedMemMB),
@@ -121,6 +112,6 @@ func simulateCommitteePBFT(payloadSize int) {
 		for _, b := range payload {
 			sum += int(b) % 7 // dummy computation
 		}
-		time.Sleep(50 * time.Millisecond) // simulate a network delay per phase
+		time.Sleep(50 * time.Millisecond) // simulate delay
 	}
 }
