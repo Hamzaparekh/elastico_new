@@ -11,8 +11,8 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 )
 
-var payloadSizes = []int{64, 128, 256, 512, 1024, 2048, 4096, 8192} // Bytes
-var transactionsPerIteration = 5                                    // Number of transactions to simulate per iteration
+var payloadSizes = []int{64, 128, 256, 512, 1024, 2048, 4096, 8192}
+var transactionsPerIteration = 5
 
 func RunBenchmark() {
 	file, err := os.Create("benchmark.csv")
@@ -25,7 +25,6 @@ func RunBenchmark() {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Updated CSV header to include NumTransactions
 	writer.Write([]string{"Iteration", "PayloadSize", "NumTransactions", "Latency(s)", "CPU(%)", "Memory(MB)"})
 
 	iteration := 1
@@ -34,22 +33,17 @@ func RunBenchmark() {
 		for i := 0; i < 50; i++ {
 			fmt.Printf("⚙️ Iteration %d starting... (%d transactions)\n", iteration, transactionsPerIteration)
 
-			// CPU measurement before any transaction
 			cpuBefore, _ := cpu.Percent(100*time.Millisecond, false)
 			start := time.Now()
 
-			// Run multiple transactions sequentially
 			for t := 0; t < transactionsPerIteration; t++ {
 				runElasticoTransaction(size)
 			}
 
-			// Measure total latency for all transactions
 			latency := time.Since(start).Seconds()
-			// Pause briefly before measuring CPU again
 			time.Sleep(300 * time.Millisecond)
 			cpuAfter, _ := cpu.Percent(100*time.Millisecond, false)
 
-			// Measure RSS of this process
 			pid := int32(os.Getpid())
 			proc, err := process.NewProcess(pid)
 			if err != nil {
@@ -63,10 +57,9 @@ func RunBenchmark() {
 			avgCPU := (cpuBefore[0] + cpuAfter[0]) / 2
 			usedMemMB := float64(memInfo.RSS) / (1024 * 1024)
 
-			fmt.Printf("✅ Iteration %d complete. Latency: %.4fs (for %d tx) | CPU: %.2f%% | Mem: %.2fMB\n",
+			fmt.Printf("Iteration %d complete. Latency: %.4fs (for %d tx) | CPU: %.2f%% | Mem: %.2fMB\n",
 				iteration, latency, transactionsPerIteration, avgCPU, usedMemMB)
 
-			// Write results to CSV: iteration, payload size, number of tx, latency, CPU, memory
 			writer.Write([]string{
 				fmt.Sprintf("%d", iteration),
 				fmt.Sprintf("%d", size),
@@ -86,7 +79,6 @@ func RunBenchmark() {
 	}
 }
 
-// 🔁 Simulates a real Elastico transaction + PBFT round
 func runElasticoTransaction(payloadSize int) {
 	fmt.Println("🔁 Simulating Elastico transaction + PBFT...")
 
@@ -105,7 +97,6 @@ func runElasticoTransaction(payloadSize int) {
 
 	_ = proof.GetCommitteeNo()
 
-	// Simulate committee-level consensus using dummy payload
 	simulateCommitteePBFT(payloadSize)
 }
 
@@ -115,12 +106,11 @@ func simulateCommitteePBFT(payloadSize int) {
 		payload[i] = byte(i % 256)
 	}
 
-	// Simulate 3 PBFT rounds: pre-prepare, prepare, commit
 	for round := 0; round < 3; round++ {
 		sum := 0
 		for _, b := range payload {
-			sum += int(b) % 7 // dummy computation
+			sum += int(b) % 7
 		}
-		time.Sleep(50 * time.Millisecond) // simulate a network delay per phase
+		time.Sleep(50 * time.Millisecond)
 	}
 }
